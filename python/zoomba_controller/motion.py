@@ -9,44 +9,51 @@ class motion(object):
     def __init__(self):
         self.PWM_PIN = 18
         self.MODE_PIN = 17
-        self.DIRECTION1_PIN = 4
-        self.DIRECTION2_PIN = 24
+        self.DIRECTION_L_PIN = 4
+        self.DIRECTION_R_PIN = 24
 
-        GPIO.setup(PWM_PIN, GPIO.OUT)
-        GPIO.setup(MODE_PIN, GPIO.OUT)
-        GPIO.setup(DIRECTION1_PIN, GPIO.OUT)
-        GPIO.setup(DIRECTION2_PIN, GPIO.OUT)
+        GPIO.setup(self.PWM_PIN, GPIO.OUT)
+        GPIO.setup(self.MODE_PIN, GPIO.OUT)
+        GPIO.setup(self.DIRECTION_L_PIN, GPIO.OUT)
+        GPIO.setup(self.DIRECTION_R_PIN, GPIO.OUT)
 
         GPIO.setmode(GPIO.BCM)
 
+        # Set mode to PWM
+        GPIO.OUTPUT(self.MODE_PIN, 1)
+        self.pwm = GPIO.PWM(self.PWM1_PIN, 50)
 
-
-
-# Set mode to PWM
-GPIO.output(MODE_PIN,1)
-
-#pwm = GPIO.PWM(PWM_PIN, 2)
-#pwm.start(1)
-#raw_input('Press return to stop:')
-#pwm.stop()
-#GPIO.cleanup()
-
-p1 = GPIO.PWM(PWM1_PIN, 50)
-p2 = GPIO.PWM(PWM2_PIN, 50)
-p1.start(0)
-p2.start(0)
-try:
-    while 1:
-	for dc in range(0, 101, 5):
-	    p1.ChangeDutyCycle(dc)
-	    p2.ChangeDutyCycle(dc)
-	    time.sleep(0.1)
-	for dc in range(100, -1, -5):
-	    p1.ChangeDutyCycle(dc)
-	    p2.ChangeDutyCycle(dc)
-	    time.sleep(0.1)
-except KeyboardInterrupt:
-    pass
-p1.stop()
-p2.stop()
-GPIO.cleanup()
+    def turn(self, direction, degrees):
+        """Turns the bot the direction and degrees given as arguments
+        """
+        if direction == "left":
+            GPIO.OUTPUT(self.DIRECTION_L_PIN, 1)
+            GPIO.OUTPUT(self.DIRECTION_R_PIN, 0)
+        elif direction == "right":
+            GPIO.OUTPUT(self.DIRECTION_L_PIN, 0)
+            GPIO.OUTPUT(self.DIRECTION_R_PIN, 1)
+        else: raise Exception("Cannot turn to direction %s, options are 'left' and 'right'" % direction)
+        
+        self.pwm.start(10)
+        time.sleep(degrees/10)
+        self.pwm.stop()
+        
+    def advance(self, direction, time):
+        """Tells the bot the advance to direction given for the given time
+        """
+        if direction == "forward":
+            GPIO.OUTPUT(self.DIRECTION_L_PIN, 1)
+            GPIO.OUTPUT(self.DIRECTION_R_PIN, 1)
+        elif direction == "backward":
+            GPIO.OUTPUT(self.DIRECTION_L_PIN, 0)
+            GPIO.OUTPUT(self.DIRECTION_R_PIN, 0)
+        else: Exception("Cannot advance to direction %s, options are 'forward' and backward" % direction)
+        
+        self.pwm.start(10)
+        time.sleep(time)
+        self.pwm.stop()
+            
+    def __del__(self):
+        """Cleans up the GPIOs
+        """
+        GPIO.cleanup()

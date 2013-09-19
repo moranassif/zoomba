@@ -3,7 +3,7 @@ import time
 
 m = motion()
 
-m.do_nothing()
+m.drive()
 #m.advance("forward", 1)
 #m.advance("backward", 1)
 
